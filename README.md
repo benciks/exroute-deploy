@@ -14,7 +14,7 @@ The web app and the API share one domain. The Ingress sends `/api` to `exroute:8
 
 - `kubectl` 1.27+ (it includes Kustomize)
 - Local: Docker and [k3d](https://k3d.io)
-- Prod: a server running k3s, ports 80 and 443 open, and a DNS `A` record from `route.benciks.uk` to the server's IP
+- Prod: a server running k3s, ports 80 and 443 open, and a DNS `A` record from `exroute.benciks.uk` to the server's IP
 - A GitHub classic personal access token with only the `read:packages` scope, because the images on ghcr.io are private
 - The Valhalla data (see [Valhalla data](#valhalla-data-first-boot))
 
@@ -65,7 +65,7 @@ kubectl config use-context <server context>   # check this, you don't want to de
 kubectl apply -k overlays/prod
 ```
 
-Then copy the Valhalla data (see below) and open http://route.benciks.uk.
+Then copy the Valhalla data (see below) and open http://exroute.benciks.uk.
 
 HTTPS is not set up yet. Traefik serves a self-signed certificate until cert-manager is added.
 
