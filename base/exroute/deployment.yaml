@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exroute
+spec:
+  selector:
+    matchLabels:
+      app: exroute
+  template:
+    metadata:
+      labels:
+        app: exroute
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: exroute
+          image: ghcr.io/benciks/exroute:v0.0.3
+          ports:
+            - name: exroute
+              containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: postgresql
+          env:
+            - name: DATABASE_URL
+              value: postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
+            - name: VALHALLA_URL
+              value: http://valhalla:8002
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: exroute
+                  key: JWT_SECRET
+                  optional: false
+            - name: LLM_API_ENDPOINT
+              value: https://llm.ai.e-infra.cz/v1
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: exroute
+                  key: LLM_API_KEY
+                  optional: false
+            - name: GEOCODE_URL
+              value: https://api.heigit.org
+            - name: GEOCODE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: exroute
+                  key: GEOCODE_API_KEY
+                  optional: false
+            - name: MAPBOX_URL
+              value: https://api.mapbox.com/search/geocode/v6
+            - name: MAPBOX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: exroute
+                  key: MAPBOX_API_KEY
+                  optional: false
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: exroute
+            initialDelaySeconds: 5
+            periodSeconds: 3

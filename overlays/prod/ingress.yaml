@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: exroute-ingress
+  labels:
+    app.kubernetes.io/name: exroute-ingress
+spec:
+  rules:
+    - host: "exroute.benciks.uk"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: exroute-web
+                port:
+                  name: exroute-web
+          - pathType: Prefix
+            path: "/api"
+            backend:
+              service:
+                name: exroute
+                port:
+                  name: exroute

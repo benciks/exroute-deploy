@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exroute-web
+spec:
+  selector:
+    matchLabels:
+      app: exroute-web
+  template:
+    metadata:
+      labels:
+        app: exroute-web
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: exroute-web
+          image: ghcr.io/benciks/exroute-web:v0.0.2
+          ports:
+            - name: exroute-web
+              containerPort: 3000

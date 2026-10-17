@@ -1,0 +1,6 @@
+resources:
+  - ../../base
+  - ingress.yaml
+  - namespace.yaml
+
+namespace: exroute-prod
