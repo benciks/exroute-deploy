@@ -6,6 +6,7 @@ Kubernetes manifests for exroute, managed with Kustomize.
 base/              shared manifests: postgres, valhalla, exroute (API), exroute-web
 overlays/local/    k3d on your machine, namespace "exroute", http://exroute.localhost:8080
 overlays/prod/     k3s on the server, namespace "exroute-prod", https://exroute.benciks.uk
+cluster/           cluster-wide setup applied once per server (the cert-manager ClusterIssuer)
 ```
 
 The web app and the API share one domain. The Ingress sends `/api` to `exroute:8000` and everything else to `exroute-web:3000`.
@@ -14,7 +15,7 @@ The web app and the API share one domain. The Ingress sends `/api` to `exroute:8
 
 - `kubectl` 1.27+ (it includes Kustomize)
 - Local: Docker and [k3d](https://k3d.io)
-- Prod: a server running k3s, ports 80 and 443 open, and a DNS `A` record from `exroute.benciks.uk` to the server's IP
+- Prod: a server running k3s, ports 80 and 443 open to the internet, and a DNS `A` record from `exroute.benciks.uk` to the server's IP. Let's Encrypt checks port 80 when it issues the certificate.
 - A GitHub classic personal access token with only the `read:packages` scope, because the images on ghcr.io are private
 - The Valhalla data (see [Valhalla data](#valhalla-data-first-boot))
 
@@ -33,8 +34,7 @@ kubectl create secret generic postgresql -n $NS \
   --from-literal=POSTGRES_DB=exroute
 
 kubectl create secret generic exroute -n $NS \
-  --from-literal=JWT_SECRET="$(openssl rand -hex 32)" \
-  --from-env-file=exroute-keys.env   # LLM_API_KEY, GEOCODE_API_KEY, MAPBOX_API_KEY (gitignored)
+  --from-env-file=exroute-keys.env   # JWT_SECRET, LLM_API_KEY, GEOCODE_API_KEY, MAPBOX_API_KEY (gitignored)
 
 kubectl create secret docker-registry ghcr -n $NS \
   --docker-server=ghcr.io \
@@ -47,7 +47,8 @@ Postgres only reads `POSTGRES_PASSWORD` on its very first start, when the volume
 ## Local (k3d)
 
 ```sh
-# One time. The port mapping can only be set when the cluster is created.
+# One time. Maps port 8080 on your machine to Traefik in the cluster.
+# For an existing cluster: k3d cluster edit exroute --port-add "8080:80@loadbalancer"
 k3d cluster create exroute -p "8080:80@loadbalancer"
 
 kubectl config use-context k3d-exroute
@@ -61,13 +62,42 @@ Then copy the Valhalla data (see below) and open http://exroute.localhost:8080.
 
 ```sh
 kubectl config use-context <server context>   # check this, you don't want to deploy to the wrong cluster
+```
+
+**Cluster setup (once per server).** Install cert-manager, then apply the Let's Encrypt `ClusterIssuer`. Use the latest version from the [cert-manager releases](https://github.com/cert-manager/cert-manager/releases).
+
+```sh
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/vX.Y.Z/cert-manager.yaml
+kubectl get pods -n cert-manager   # wait until all 3 pods are Running
+kubectl apply -f cluster/
+```
+
+The issuer lives in `cluster/` and not in the overlay because it is cluster-wide. The Ingress refers to it only by name, through the `cert-manager.io/cluster-issuer` annotation.
+
+**The app:**
+
+```sh
 # create the secrets (see above) with NS=exroute-prod
 kubectl apply -k overlays/prod
 ```
 
-Then copy the Valhalla data (see below) and open http://exroute.benciks.uk.
+Then copy the Valhalla data (see below) and open https://exroute.benciks.uk.
 
-HTTPS is not set up yet. Traefik serves a self-signed certificate until cert-manager is added.
+### HTTPS
+
+cert-manager sees the `tls` section and the annotation on the prod Ingress. It requests a certificate from Let's Encrypt using the HTTP-01 challenge on port 80, stores the result in the Secret `exroute-benciks-uk-tls`, and renews it automatically about 30 days before it expires. Traefik serves that certificate on port 443.
+
+```sh
+kubectl get certificate -n exroute-prod          # READY should be True within a minute or two
+kubectl describe certificate -n exroute-prod     # events and the renewal time
+kubectl get challenges -n exroute-prod           # only exists while a request is in progress or stuck
+```
+
+If READY stays `False`, run `kubectl describe challenge` to see the exact error. The usual causes are DNS not pointing to the server, or port 80 being blocked. Until the certificate is issued, Traefik serves its own self-signed certificate, so the browser shows a warning.
+
+Let's Encrypt rate-limits failed requests. If you are debugging, temporarily point the annotation at a staging issuer (server `https://acme-staging-v02.api.letsencrypt.org/directory`) and switch back once it works.
+
+HTTP is not redirected to HTTPS yet. That is configured on Traefik itself with a `HelmChartConfig`. Check that certificate renewal still works after adding the redirect.
 
 ## Valhalla data (first boot)
 

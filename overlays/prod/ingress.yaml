@@ -4,7 +4,13 @@ metadata:
   name: exroute-ingress
   labels:
     app.kubernetes.io/name: exroute-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
+  tls:
+    - hosts:
+        - exroute.benciks.uk
+      secretName: exroute-benciks-uk-tls
   rules:
     - host: "exroute.benciks.uk"
       http:
