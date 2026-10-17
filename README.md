@@ -5,7 +5,7 @@ Kubernetes manifests for exroute, managed with Kustomize.
 ```
 base/              shared manifests: postgres, valhalla, exroute (API), exroute-web
 overlays/local/    k3d on your machine, namespace "exroute", http://exroute.localhost:8080
-overlays/prod/     k3s on the server, namespace "exroute-prod", https://route.benciks.uk
+overlays/prod/     k3s on the server, namespace "exroute-prod", https://exroute.benciks.uk
 ```
 
 The web app and the API share one domain. The Ingress sends `/api` to `exroute:8000` and everything else to `exroute-web:3000`.
