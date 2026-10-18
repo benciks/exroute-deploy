@@ -15,7 +15,7 @@ spec:
         - name: ghcr
       containers:
         - name: exroute
-          image: ghcr.io/benciks/exroute:v0.0.5
+          image: ghcr.io/benciks/exroute:v0.0.6
           ports:
             - name: exroute
               containerPort: 8000
@@ -49,13 +49,13 @@ spec:
                   name: exroute
                   key: GEOCODE_API_KEY
                   optional: false
-            - name: MAPBOX_URL
-              value: https://api.mapbox.com/search/geocode/v6
-            - name: MAPBOX_API_KEY
+            - name: GEOAPIFY_URL
+              value: https://api.geoapify.com
+            - name: GEOAPIFY_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: exroute
-                  key: MAPBOX_API_KEY
+                  key: GEOAPIFY_API_KEY
                   optional: false
           readinessProbe:
             httpGet:
