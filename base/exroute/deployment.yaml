@@ -15,7 +15,7 @@ spec:
         - name: ghcr
       containers:
         - name: exroute
-          image: ghcr.io/benciks/exroute:v0.0.7
+          image: ghcr.io/benciks/exroute:v0.0.8
           ports:
             - name: exroute
               containerPort: 8000
@@ -40,14 +40,6 @@ spec:
                 secretKeyRef:
                   name: exroute
                   key: LLM_API_KEY
-                  optional: false
-            - name: GEOCODE_URL
-              value: https://api.heigit.org
-            - name: GEOCODE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: exroute
-                  key: GEOCODE_API_KEY
                   optional: false
             - name: GEOAPIFY_URL
               value: https://api.geoapify.com
