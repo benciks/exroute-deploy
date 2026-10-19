@@ -17,7 +17,7 @@ spec:
         - name: ghcr
       containers:
         - name: valhalla
-          image: ghcr.io/benciks/valhalla:3.9.1-fork.1
+          image: ghcr.io/benciks/valhalla:3.9.1-fork.2
           command: ["valhalla_service"]
           args: ["/custom_files/valhalla.json", "1"]
           ports:
