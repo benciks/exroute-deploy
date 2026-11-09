@@ -6,6 +6,9 @@ metadata:
     app.kubernetes.io/name: exroute-ingress
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
+    # <namespace>-<middleware name>@kubernetescrd. cert-manager's challenge Ingress doesn't
+    # have it, so certificate renewal over HTTP keeps working
+    traefik.ingress.kubernetes.io/router.middlewares: exroute-prod-redirect-https@kubernetescrd
 spec:
   tls:
     - hosts:

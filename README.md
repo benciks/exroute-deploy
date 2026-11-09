@@ -97,7 +97,14 @@ If READY stays `False`, run `kubectl describe challenge` to see the exact error.
 
 Let's Encrypt rate-limits failed requests. If you are debugging, temporarily point the annotation at a staging issuer (server `https://acme-staging-v02.api.letsencrypt.org/directory`) and switch back once it works.
 
-HTTP is not redirected to HTTPS yet. That is configured on Traefik itself with a `HelmChartConfig`. Check that certificate renewal still works after adding the redirect.
+Plain HTTP is redirected to HTTPS by the Traefik `Middleware` in `overlays/prod/redirect-https.yaml`, which the prod Ingress attaches through its `traefik.ingress.kubernetes.io/router.middlewares` annotation. cert-manager's temporary challenge Ingress doesn't carry that annotation, so Let's Encrypt can still reach the challenge over HTTP and renewals keep working. To check:
+
+```sh
+curl -I http://exroute.benciks.uk                # 308 with Location: https://exroute.benciks.uk/
+kubectl get certificate -n exroute-prod          # still READY True
+```
+
+The Middleware uses `traefik.io/v1alpha1`. Clusters with Traefik older than 2.10 only know `traefik.containo.us/v1alpha1`; `kubectl api-resources | grep -i middleware` shows which one yours serves.
 
 ## Valhalla data (first boot)
 

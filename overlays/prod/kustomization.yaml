@@ -2,5 +2,6 @@ resources:
   - ../../base
   - ingress.yaml
   - namespace.yaml
+  - redirect-https.yaml
 
 namespace: exroute-prod

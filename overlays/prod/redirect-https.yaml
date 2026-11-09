@@ -1,0 +1,9 @@
+# Redirects plain HTTP to HTTPS, attached to the Ingress by its annotation
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
