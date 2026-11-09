@@ -34,7 +34,7 @@ kubectl create secret generic postgresql -n $NS \
   --from-literal=POSTGRES_DB=exroute
 
 kubectl create secret generic exroute -n $NS \
-  --from-env-file=exroute-keys.env   # JWT_SECRET, LLM_API_KEY, GEOCODE_API_KEY, MAPBOX_API_KEY (gitignored)
+  --from-env-file=exroute-keys.env   # JWT_SECRET, LLM_API_KEY, GEOAPIFY_API_KEY (gitignored)
 
 kubectl create secret docker-registry ghcr -n $NS \
   --docker-server=ghcr.io \
